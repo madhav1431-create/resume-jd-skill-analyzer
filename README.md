@@ -1,4 +1,4 @@
-# 🧠 AI Adaptive Onboarding Engine — Complete Bundle
+# AI Adaptive Onboarding Engine
 
 Two fully integrated layers in one project:
 
@@ -36,8 +36,6 @@ ai_onboarding_engine/
 
 ---
 
-## Quickstart — Web App (no GPU needed)
-
 ```bash
 pip install streamlit pdfplumber
 streamlit run app/streamlit_app.py
@@ -45,14 +43,6 @@ streamlit run app/streamlit_app.py
 Runs in rule-based mode automatically when no checkpoint is present.
 
 ---
-
-## Train on Kaggle (2x T4, ~6 min)
-
-1. Zip and upload as a Kaggle Dataset
-2. Open `training/kaggle_train.ipynb`, enable GPU T4 x2
-3. Run all cells
-4. Download `checkpoints/best_model.pt` + `tokenizer.json`
-
 ## Run with Trained Model
 
 ```bash
