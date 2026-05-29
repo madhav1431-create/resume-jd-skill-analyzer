@@ -12,24 +12,25 @@ Two fully integrated layers in one project:
 ## Project Structure
 
 ```
-ai_onboarding_engine/
-├── data/
-│   ├── skill_vocab.py        # 128-skill vocabulary + aliases + dependency graph
-│   └── dataset.py            # Synthetic dataset pipeline
-├── models/
-│   ├── transformer.py        # Siamese Transformer from scratch (MHSA + FFN + mean pool)
-│   └── losses.py             # CosineEmbeddingLoss + BCEWithLogitsLoss + metrics
-├── training/
-│   ├── train.py              # Multi-GPU fp16 training loop + checkpointing
-│   ├── inference.py          # OnboardingEngine high-level wrapper
-│   └── kaggle_train.ipynb    # Ready-to-run on Kaggle 2x T4 GPUs
-├── utils/
-│   ├── tokenizer.py          # Word-level tokenizer (from scratch)
-│   ├── text_utils.py         # PDF extraction + text cleaning
-│   └── roadmap.py            # BFS prerequisites + topological sort
+Hackathon-Project/
 ├── app/
-│   ├── engine.py             # Rule-based engine (80+ skills, alias map, roadmap)
-│   └── streamlit_app.py      # Full Streamlit UI
+│   ├── engine.py                # Rule-based engine (80+ skills, alias map, roadmap)
+│   └── model_streamlit_app.py   # Full Streamlit UI
+├── checkpoints/                 # Model checkpoints go here
+├── data/
+│   ├── skill_vocab.py           # 128-skill vocabulary + aliases + dependency graph
+│   └── dataset.py               # Synthetic dataset pipeline
+├── models/
+│   ├── transformer.py           # Siamese Transformer from scratch (MHSA + FFN + mean pool)
+│   └── losses.py                # CosineEmbeddingLoss + BCEWithLogitsLoss + metrics
+├── training/
+│   ├── train.py                 # Multi-GPU fp16 training loop + checkpointing
+│   ├── inference.py             # OnboardingEngine high-level wrapper
+│   └── kaggle_train.ipynb       # Ready-to-run on Kaggle 2x T4 GPUs
+├── utils/
+│   ├── tokenizer.py             # Word-level tokenizer (from scratch)
+│   ├── text_utils.py            # PDF extraction + text cleaning
+│   └── roadmap.py               # BFS prerequisites + topological sort
 ├── requirements.txt
 └── README.md
 ```
@@ -39,8 +40,8 @@ ai_onboarding_engine/
 ## Quick Start
 
 ```bash
-pip install streamlit pdfplumber
-streamlit run app/streamlit_app.py
+pip install -r requirements.txt
+streamlit run app/model_streamlit_app.py
 ```
 
 Runs in rule-based mode automatically when no checkpoint is present.
@@ -53,7 +54,7 @@ Runs in rule-based mode automatically when no checkpoint is present.
 mkdir checkpoints
 cp best_model.pt checkpoints/
 cp tokenizer.json checkpoints/
-streamlit run app/streamlit_app.py
+streamlit run app/model_streamlit_app.py
 ```
 
 ---
@@ -76,3 +77,10 @@ Params:  ~6.5M  |  hidden=256  |  layers=3  |  heads=4  |  max_len=256
 ```
 L = CosineEmbeddingLoss  +  0.5 × BCEWithLogitsLoss (resume + JD skill heads)
 ```
+
+---
+
+## Contributors
+
+- [madhav1431-create](https://github.com/madhav1431-create)
+- [Mitul-dev](https://github.com/Mitul-dev) — Model upgrade & folder restructure
