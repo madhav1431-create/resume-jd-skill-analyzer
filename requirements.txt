@@ -1,0 +1,15 @@
+# ── Web App ────────────────────────────────────────────────────────────────
+streamlit>=1.32.0
+pdfplumber>=0.10.0
+
+# ── Core ML (model training & inference) ──────────────────────────────────
+torch>=2.1.0
+
+# ── PDF extraction fallback chain ─────────────────────────────────────────
+PyMuPDF>=1.23.0        # preferred (pip install PyMuPDF)
+# pdfminer.six>=20221105  # fallback option 1
+# pypdf>=3.17.0           # fallback option 2
+
+# ── Utilities ─────────────────────────────────────────────────────────────
+numpy>=1.26.0
+tqdm>=4.66.0

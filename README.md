@@ -1,153 +1,78 @@
 # AI Adaptive Onboarding Engine
 
-## Overview
-The AI Adaptive Onboarding Engine is an intelligent skill-gap analysis and learning pathway generation system designed to optimize corporate onboarding experiences. By analyzing a candidate’s Resume alongside a target Job Description (JD), the system dynamically identifies missing competencies and constructs a personalized, dependency-aware learning roadmap.
+Two fully integrated layers in one project:
 
-Unlike traditional onboarding programs that follow static curricula, this solution enables adaptive skill progression, minimizing redundant training and accelerating role-specific readiness.
-
----
-
-## Problem Statement
-Modern corporate onboarding often adopts a “one-size-fits-all” learning approach, leading to:
-
-- Experienced hires revisiting concepts they already know  
-- Beginners struggling with advanced modules without proper foundations  
-- Inefficient training time allocation and delayed productivity  
-
-This project addresses these challenges by generating data-driven adaptive learning paths based on automated skill-gap analysis.
+| Layer | What it is |
+|---|---|
+| **PyTorch model** | Multi-Task Siamese Transformer trained from scratch — resume–JD similarity + multi-label skill extraction |
+| **Streamlit app** | Dark-themed web UI — upload PDFs, see match score, skill gaps, dependency-ordered roadmap, resume rewrite suggestions |
 
 ---
 
-## Key Features
-- Intelligent Resume & Job Description parsing  
-- Rule-based NLP skill extraction engine  
-- Automated skill-gap identification  
-- Graph-based adaptive learning roadmap generation  
-- Explainable recommendations (Reasoning Trace)  
-- Functional web interface for document upload and visualization  
-- Personalized training pathway sequencing  
+## Project Structure
+
+```
+ai_onboarding_engine/
+├── data/
+│   ├── skill_vocab.py        # 128-skill vocabulary + aliases + dependency graph
+│   └── dataset.py            # Synthetic dataset pipeline
+├── models/
+│   ├── transformer.py        # Siamese Transformer from scratch (MHSA + FFN + mean pool)
+│   └── losses.py             # CosineEmbeddingLoss + BCEWithLogitsLoss + metrics
+├── training/
+│   ├── train.py              # Multi-GPU fp16 training loop + checkpointing
+│   ├── inference.py          # OnboardingEngine high-level wrapper
+│   └── kaggle_train.ipynb    # Ready-to-run on Kaggle 2x T4 GPUs
+├── utils/
+│   ├── tokenizer.py          # Word-level tokenizer (from scratch)
+│   ├── text_utils.py         # PDF extraction + text cleaning
+│   └── roadmap.py            # BFS prerequisites + topological sort
+├── app/
+│   ├── engine.py             # Rule-based engine (80+ skills, alias map, roadmap)
+│   └── streamlit_app.py      # Full Streamlit UI
+├── requirements.txt
+└── README.md
+```
 
 ---
 
-## System Architecture
-Resume PDF → Text Extraction → Skill Detection
-JD PDF → Text Extraction → Required Skill Mapping
-Skill Gap Engine → Dependency Graph → Roadmap Generator
-Web UI Visualization
+## Quick Start
+
+```bash
+pip install streamlit pdfplumber
+streamlit run app/streamlit_app.py
+```
+
+Runs in rule-based mode automatically when no checkpoint is present.
 
 ---
 
-## Application Screenshots
+## Run with Trained Model
 
-### Home — Resume & JD Upload
-![Home UI](ui_home.jpeg)
-
-### AI Insights Dashboard — Skill Gap Analysis
-![Overview UI](ui_overview.jpeg)
-
-### Personalized Learning Roadmap
-![Roadmap UI](ui_roadmap.jpeg)
-
-### Resume Rewrite + Smart Suggestions
-![Suggestions UI](ui_suggestion.jpeg)
+```bash
+mkdir checkpoints
+cp best_model.pt checkpoints/
+cp tokenizer.json checkpoints/
+streamlit run app/streamlit_app.py
+```
 
 ---
 
-## Adaptive Pathing Logic:
+## Architecture
 
-The system models skill acquisition as a *dependency graph*, where advanced competencies require foundational prerequisites.
+```
+Resume ──┐                        ┌── Similarity head  → score [0,1]
+         ├── SharedTextEncoder ───┤
+JD     ──┘  (shared weights)      └── Skill head × 2  → 128-dim logits
 
-* Missing skills are identified via Resume–JD comparison
-* Prerequisite chains are recursively expanded
-* A topologically ordered roadmap is generated
-
-### Example Learning Sequence:
-
-
-Python → Machine Learning → Deep Learning
-
-If Python is missing, the roadmap automatically begins with Python before progressing further.
-
-
-## Tech Stack:
-
-* *Python*
-* *pdfplumber* (PDF text extraction)
-* *Streamlit* (interactive web UI)
-* Rule-based NLP skill matching engine
-* Graph traversal logic (DFS-based adaptive sequencing)
-
-
-## Datasets & Knowledge Sources:
-
-* Kaggle Resume Dataset
-* Job Description Dataset
-* O*NET Skills Database
-
-(All datasets are publicly available and used for skill reference modeling.)
-
-
-## How to Run the Project:
-
-### 1️. Clone Repository
-
-git clone https://github.com/madhav1431-create/Hackathon-Project.git
-cd ai-adaptive-onboarding-engine
-
-### 2️. Install Dependencies
-
-pip install -r requirements.txt
-
-### 3️. Launch Application
-
-streamlit run app.py
-
-
-## Sample Inputs:
-
-Use the sample files provided in the repository:
-
-* resume.pdf
-* jd.pdf
-
-Upload them via the web interface to generate a personalized roadmap.
-
-
-## Expected Output:
-
-* Detected resume competencies
-* Required job skills
-* Identified skill gaps
-* Dependency-aware adaptive learning roadmap
-* Explainable recommendation trace
-
-
-## Demo Video:
-
- [demo video link](https://drive.google.com/file/d/16pKO1XFDauRgSN74SLSOvjfhAW0vEghU/view?usp=sharing)
-
-
-## Technical Presentation
-
-[presentation link](https://docs.google.com/presentation/d/1LkswmpwKmo2c7XoQUtaEgQ9AR__UBfTj/edit?usp=sharing&ouid=113179207849990772712&rtpof=true&sd=true)
-
-
-## Future Improvements:
-
-* Semantic skill understanding using LLM embeddings
-* Knowledge tracing-based personalization
-* Training duration estimation & difficulty scoring
-* Real-time learner progress tracking
-* Cross-domain onboarding generalization
-
-
-## Contributors:
-
-* Madhav Mittal
-* Rishabh Shrivastava
+Encoder: Embedding → Sinusoidal PE → 3x Pre-LN Transformer → Mean pool → (B,256)
+Params:  ~6.5M  |  hidden=256  |  layers=3  |  heads=4  |  max_len=256
+```
 
 ---
 
-## Hackathon Submission:
+## Loss
 
-Developed as part of the *AI Adaptive Onboarding Engine Hackathon Challenge*, demonstrating intelligent skill-gap reasoning, adaptive curriculum sequencing, and practical onboarding optimization.
+```
+L = CosineEmbeddingLoss  +  0.5 × BCEWithLogitsLoss (resume + JD skill heads)
+```
